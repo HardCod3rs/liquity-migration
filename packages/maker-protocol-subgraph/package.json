@@ -1,0 +1,22 @@
+{
+  "name": "maker-protocol-subgraph",
+  "version": "0.1.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "author": "Sebastián Galiano <sgaliano@gmail.com>",
+  "scripts": {
+    "auth": "graph auth https://api.thegraph.com/deploy/",
+    "build": "graph build",
+    "codegen": "graph codegen",
+    "create-local": "graph create --node http://localhost:8020/ hardcod3rs/makerkovan",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ hardcod3rs/makerkovan",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 hardcod3rs/makerkovan",
+    "remove-local": "graph remove --node http://localhost:8020/ hardcod3rs/makerkovan",
+    "test": "yarn run codegen && yarn run build"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.19.0",
+    "@graphprotocol/graph-ts": "0.19.0",
+    "@protofire/subgraph-toolkit": "0.1.1"
+  }
+}

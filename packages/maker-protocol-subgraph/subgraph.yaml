@@ -1,0 +1,441 @@
+description: Multi Collateral Dai (MCD)
+specVersion: 0.0.2
+
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  #
+  # Core Module
+  #
+
+  # Vault Engine
+  - name: Vat
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Vat
+      address: '0xbA987bDB501d131f766fEe8180Da5d81b34b69d9'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/core/vat.ts
+      abis:
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralType
+        - SystemState
+        - UserProxy
+        - Vault
+      eventHandlers:
+        ### Administration ###
+
+        # function init(bytes32 ilk)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x3b66319500000000000000000000000000000000000000000000000000000000'
+          handler: handleInit
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function file(bytes32 ilk, bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x1a0b287e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        ### Fungibility ###
+
+        # function slip(bytes32 ilk, address usr, int256 wad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x7cdd3fde00000000000000000000000000000000000000000000000000000000'
+          handler: handleSlip
+
+        # function flux(bytes32 ilk, address src, address dst, uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x6111be2e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFlux
+
+        # function move(address src, address dst, uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xbb35783b00000000000000000000000000000000000000000000000000000000'
+          handler: handleMove
+
+        ### CDP Manipulation ###
+
+        # function frob(bytes32 i, address u, address v, address w, int256 dink, int256 dart)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x7608870300000000000000000000000000000000000000000000000000000000'
+          handler: handleFrob
+
+        ### CDP Fungibility ###
+
+        # function fork(bytes32 ilk, address src, address dst, int256 dink, int256 dart)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x870c616d00000000000000000000000000000000000000000000000000000000'
+          handler: handleFork
+
+        ### CDP Confiscation ###
+
+        # function grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x7bab3f4000000000000000000000000000000000000000000000000000000000'
+          handler: handleGrab
+
+        ### Settlement ###
+
+        # function heal(uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xf37ac61c00000000000000000000000000000000000000000000000000000000'
+          handler: handleHeal
+
+        # function suck(address u, address v, uint256 rad)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xf24e23eb00000000000000000000000000000000000000000000000000000000'
+          handler: handleSuck
+
+        ### Rates ###
+
+        # function fold(bytes32 i, address u, int256 rate)
+        - event: LogNote(indexed bytes4,indexed bytes32,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xb65337df00000000000000000000000000000000000000000000000000000000'
+          handler: handleFold
+
+  #  Liaison between the oracles and core contracts
+  - name: Spot
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Spotter
+      address: '0x3a042de6413eDB15F2784f2f97cC68C7E9750b2D'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/core/spot.ts
+      abis:
+        - name: Spotter
+          file: ./abis/Spotter.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralPrice
+        - CollateralType
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+
+        # TODO: file(bytes32 ilk, bytes32 what, address pip_)
+
+        # TODO: file(bytes32 what, uint256 data)
+
+        # file(bytes32 ilk, bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x1a0b287e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        ### Update value ###
+
+        # event Poke(bytes32 ilk, bytes32 val, uint256 spot)
+        - event: Poke(bytes32,bytes32,uint256)
+          handler: handlePoke
+
+  #  Liquidation Agent
+  - name: Cat
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Cat
+      address: '0xdDb5F7A3A5558b9a6a1f3382BD75E2268d1c6958'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/core/cat.ts
+      abis:
+        - name: Cat
+          file: ./abis/Cat.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralType
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+
+        # function file(bytes32 ilk, bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x1a0b287e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function file(bytes32 ilk, bytes32 what, address flip)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xebecb39d00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        ### CDP Liquidation ###
+
+        # function bite(bytes32 ilk, address urn)
+        - event: Bite(indexed bytes32,indexed address,uint256,uint256,uint256,address,uint256)
+          handler: handleBite
+
+  #
+  # System Stabilizer Module
+  #
+
+  # Surplus Auction
+  - name: Flap
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Flapper
+      address: '0x064cd5f762851b1af81Fd8fcA837227cb3eC84b4'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/system-stabilizer/flap.ts
+      abis:
+        - name: Flapper
+          file: ./abis/Flapper.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+      eventHandlers:
+        ### Admin ###
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+  # Debt Auction
+  - name: Flop
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Flopper
+      address: '0x145B00b1AC4F01E84594EFa2972Fce1f5Beb5CED'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/system-stabilizer/flop.ts
+      abis:
+        - name: Flopper
+          file: ./abis/Flopper.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+      eventHandlers:
+        ### Admin ###
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+  # Balance Sheet
+  - name: Vow
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Vow
+      address: '0x0F4Cbe6CBA918b7488C26E29d9ECd7368F38EA3b'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/system-stabilizer/vow.ts
+      abis:
+        - name: Vow
+          file: ./abis/Vow.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+  #
+  # Rates Module
+  #
+
+  # Accumulation of Stability Fees for collateral types
+  - name: Jug
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Jug
+      address: '0xcbB7718c9F39d05aEEDE1c472ca8Bf804b2f1EaD'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/rates/jug.ts
+      abis:
+        - name: Jug
+          file: ./abis/Jug.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralType
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+
+        # init(bytes32 ilk)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x3b66319500000000000000000000000000000000000000000000000000000000'
+          handler: handleInit
+
+        # function file(bytes32 ilk, bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x1a0b287e00000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+  # Dai Savings Rate
+  - name: Pot
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Pot
+      address: '0xEA190DBDC7adF265260ec4dA6e9675Fd4f5A78bb'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/rates/pot.ts
+      abis:
+        - name: Pot
+          file: ./abis/Pot.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+      eventHandlers:
+        ### Administration ###
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+  #
+  # Proxy Module
+  #
+
+  # Used to deploy new user proxy instances
+  - name: ProxyFactory
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: DSProxyFactory
+      address: '0xe11E3b391F7E8bC47247866aF32AF67Dd58Dc800'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/proxy/proxy-factory.ts
+      abis:
+        - name: DSProxyFactory
+          file: ./abis/DSProxyFactory.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - SystemState
+        - User
+        - UserProxy
+      eventHandlers:
+        - event: Created(indexed address,indexed address,address,address)
+          handler: handleCreated
+
+  # Allow users to interact with their Vaults in an easy way, treating them as non-fungible tokens (NFTs)
+  - name: CdpManager
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: DssCdpManager
+      address: '0x1476483dD8C35F25e568113C5f70249D3976ba21'
+      startBlock: 14000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/proxy/cdp-manager.ts
+      abis:
+        - name: DssCdpManager
+          file: ./abis/DssCdpManager.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralType
+        - SystemState
+        - UserProxy
+        - Vault
+      eventHandlers:
+        # function open(bytes32 ilk, address usr)
+        - event: NewCdp(indexed address,indexed address,indexed uint256)
+          handler: handleOpen
+
+        # function give(uint cdp, address dst)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0xfcafcc6800000000000000000000000000000000000000000000000000000000'
+          handler: handleGive
+
+templates:
+  #  Collateral Auction
+  - name: Flip
+    kind: ethereum/contract
+    network: kovan
+    source:
+      abi: Flipper
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/modules/collateral/flip.ts
+      abis:
+        - name: Flipper
+          file: ./abis/Flipper.json
+        - name: Vat
+          file: ./abis/Vat.json
+      entities:
+        - CollateralAuction
+        - CollateralType
+      eventHandlers:
+        ### Admin ###
+
+        # function file(bytes32 what, uint256 data)
+        - event: LogNote(indexed bytes4,indexed address,indexed bytes32,indexed bytes32,bytes)
+          topic0: '0x29ae811400000000000000000000000000000000000000000000000000000000'
+          handler: handleFile
+
+        ### Auction ###
+
+        - event: Kick(uint256,uint256,uint256,uint256,indexed address,indexed address)
+          handler: handleKick
