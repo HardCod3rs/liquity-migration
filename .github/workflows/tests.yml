@@ -33,4 +33,5 @@ jobs:
       - name: Test
         env:
           MNEMONIC: ${{ secrets.MNEMONIC }}
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
         run: yarn test
