@@ -3,7 +3,7 @@ name: Tests
 on:
   push:
   pull_request:
-    branches: [ $default-branch ]
+    branches: [$default-branch]
 
 jobs:
   tests:
@@ -31,4 +31,6 @@ jobs:
         run: yarn --frozen-lockfile
 
       - name: Test
+        env:
+          MNEMONIC: ${{ secrets.MNEMONIC }}
         run: yarn test
