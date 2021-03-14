@@ -1,6 +1,6 @@
 {
-  "name": "migration-frontend",
-  "description": "the migration tool frontend",
+  "name": "typescript-nextjs-starter",
+  "description": "A TypeScript starter for Next.js that includes all you need to build amazing projects",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
@@ -11,6 +11,7 @@
     "type-check": "tsc",
     "lint": "eslint --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\"",
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\" --write",
+    "clean": "rm -rf .next",
     "test": "yarn run build"
   },
   "lint-staged": {
