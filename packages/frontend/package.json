@@ -1,5 +1,5 @@
 {
-  "name": "migration-frontend",
+  "name": "@liquity-migration/frontend",
   "description": "the migration utility frontend",
   "version": "1.0.0",
   "private": true,
