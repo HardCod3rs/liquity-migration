@@ -54,6 +54,10 @@
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,md,sol,ts}\"",
     "test": "yarn run typechain && hardhat test",
     "typechain": "hardhat typechain",
-    "build": "yarn run compile"
+    "build": "yarn run compile",
+    "node": "hardhat node",
+    "deploy:hardhat": "hardhat run --network hardhat scripts/deploy.ts",
+    "deploy:mainnet": "hardhat run --network mainnet scripts/deploy.ts",
+    "deploy:kovan": "hardhat run --network kovan scripts/deploy.ts"
   }
 }

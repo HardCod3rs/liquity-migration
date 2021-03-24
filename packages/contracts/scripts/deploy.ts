@@ -12,7 +12,7 @@ async function main(): Promise<void> {
   // await run("compile");
 
   // We get the contract to deploy
-  const Greeter: ContractFactory = await ethers.getContractFactory("Greeter");
+  const Greeter: ContractFactory = await ethers.getContractFactory("VaultMigration");
   const greeter: Contract = await Greeter.deploy("Hello, Buidler!");
   await greeter.deployed();
 
