@@ -15,6 +15,7 @@ contract VaultMigration is UniswapFlashSwapper, DssProxyActions {
     address ETHGemJoin;
 
     struct MakerVaultData {
+        address owner;
         address manager;
         address gemjoin;
         address daiJoin;
@@ -35,6 +36,8 @@ contract VaultMigration is UniswapFlashSwapper, DssProxyActions {
         address _MakerProxyActions,
         address _LiquityProxyBorrowerOperations,
         address _ETHGemJoin,
+        address _ProxyRegisteryAddress,
+        address _ProxyGuardRegisteryAddress,
         address _DAI,
         address _WETH,
         address _LUSD
@@ -42,20 +45,27 @@ contract VaultMigration is UniswapFlashSwapper, DssProxyActions {
         MakerProxyActions = _MakerProxyActions;
         LiquityProxyBorrowerOperations = _LiquityProxyBorrowerOperations;
         ETHGemJoin = _ETHGemJoin;
+        ProxyRegisteryAddress = _ProxyRegisteryAddress;
+        ProxyGuardRegisteryAddress = _ProxyGuardRegisteryAddress;
         LUSD = _LUSD;
     }
 
-    function _newLiquityTrove(uint256 _maxFee, uint256 _LUSDAmount) private {
+    function _newLiquityTrove(
+        address owner,
+        uint256 _maxFee,
+        uint256 _CollateralAmount,
+        uint256 _LUSDAmount
+    ) private {
         DSProxy proxy = IProxyRegistery(ProxyRegisteryAddress).build(address(this));
         DSGuard proxyAuth = IGuardRegistery(ProxyGuardRegisteryAddress).newGuard(address(this));
 
         proxy.setAuthority(DSAuthority(address(proxyAuth)));
         proxyAuth.permit(address(this), address(proxy), bytes32(uint256(-1)));
 
-        proxy.setOwner(msg.sender);
-        proxyAuth.setOwner(msg.sender);
+        proxy.setOwner(owner);
+        proxyAuth.setOwner(owner);
 
-        proxy.execute(
+        proxy.execute.value(_CollateralAmount)(
             LiquityProxyBorrowerOperations,
             abi.encodeWithSignature(
                 "openTrove(uint, uint, address, address)",
@@ -110,7 +120,7 @@ contract VaultMigration is UniswapFlashSwapper, DssProxyActions {
                     vaultData.cdpID,
                     vaultData.wad
                 );
-                _newLiquityTrove(1e17, _amountToRepay);
+                _newLiquityTrove(vaultData.owner, 1e17, _amount, _amountToRepay);
             } else {
                 wipeAllAndFreeGem(
                     vaultData.manager,
@@ -119,7 +129,7 @@ contract VaultMigration is UniswapFlashSwapper, DssProxyActions {
                     vaultData.cdpID,
                     vaultData.wad
                 );
-                _newLiquityTrove(1e17, _amountToRepay);
+                _newLiquityTrove(vaultData.owner, 1e17, _amount, _amountToRepay);
             }
         }
 
