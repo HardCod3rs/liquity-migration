@@ -9,8 +9,6 @@ import { deployThem } from "../scripts/deploy";
 import { VaultMigration } from "../typechain/VaultMigration";
 import { DsProxy } from "../typechain";
 
-deployThem();
-
 describe("Unit tests", function () {
   before(async function () {
     this.signers = {} as Signers;
@@ -19,11 +17,11 @@ describe("Unit tests", function () {
     this.signers.admin = signers[0];
   });
 
+  //TODO: Complete the Tests
+
   describe("Greeter", function () {
     beforeEach(async function () {
       // Maker
-      this.timeout(0);
-      console.log("wot");
       this.vaultMigration = <VaultMigration>await deployThem();
     });
 
