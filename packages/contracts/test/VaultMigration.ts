@@ -2,11 +2,14 @@ import hre from "hardhat";
 import { Artifact } from "hardhat/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
-import { Greeter } from "../typechain/Greeter";
 import { Signers } from "../types";
-import { shouldBehaveLikeGreeter } from "./Greeter.behavior";
+import { shouldBehaveLikeVaultMigration } from "./VaultMigration.behavior";
 
-const { deployContract } = hre.waffle;
+import { deployThem } from "../scripts/deploy";
+import { VaultMigration } from "../typechain/VaultMigration";
+import { DsProxy } from "../typechain";
+
+deployThem();
 
 describe("Unit tests", function () {
   before(async function () {
@@ -18,11 +21,12 @@ describe("Unit tests", function () {
 
   describe("Greeter", function () {
     beforeEach(async function () {
-      const greeting: string = "Hello, world!";
-      const greeterArtifact: Artifact = await hre.artifacts.readArtifact("Greeter");
-      this.greeter = <Greeter>await deployContract(this.signers.admin, greeterArtifact, [greeting]);
+      // Maker
+      this.timeout(0);
+      console.log("wot");
+      this.vaultMigration = <VaultMigration>await deployThem();
     });
 
-    shouldBehaveLikeGreeter();
+    shouldBehaveLikeVaultMigration();
   });
 });

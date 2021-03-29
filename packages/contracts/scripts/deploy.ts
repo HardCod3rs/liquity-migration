@@ -4,24 +4,67 @@ import { Contract, ContractFactory } from "ethers";
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
+import NetworkAddresses from "../networkAddresses.json";
 
-async function main(): Promise<void> {
+export async function deployThem(): Promise<Contract> {
   // Hardhat always runs the compile task when running scripts through it.
   // If this runs in a standalone fashion you may want to call compile manually
   // to make sure everything is compiled
   // await run("compile");
+  const DeploymentNetwork = "kovan";
+  const networkAddresses = NetworkAddresses[DeploymentNetwork];
 
-  // We get the contract to deploy
-  const Greeter: ContractFactory = await ethers.getContractFactory("VaultMigration");
-  const greeter: Contract = await Greeter.deploy("Hello, Buidler!");
-  await greeter.deployed();
+  // DSProxyFactory
+  const DSProxyFactory: ContractFactory = await ethers.getContractFactory("DSProxyFactory");
+  const dSProxyFactory: Contract = await DSProxyFactory.deploy();
+  await dSProxyFactory.deployed();
+  console.log("DSProxyFactory deployed to: ", dSProxyFactory.address);
 
-  console.log("Greeter deployed to: ", greeter.address);
+  // DSGuardFactory
+  const DSGuardFactory: ContractFactory = await ethers.getContractFactory("DSGuardFactory");
+  const dSGuardFactory: Contract = await DSGuardFactory.deploy();
+  await dSGuardFactory.deployed();
+  console.log("DSGuardFactory deployed to: ", dSGuardFactory.address);
+
+  // Liquity BorrowerOperations
+  const ProxyBorrowerOperations: ContractFactory = await ethers.getContractFactory("BorrowerOperationsScript");
+  const proxyBorrowerOperations: Contract = await ProxyBorrowerOperations.deploy(
+    networkAddresses.LiquityBorrowerOperations,
+    networkAddresses.LUSD,
+  );
+  await proxyBorrowerOperations.deployed();
+  console.log("ProxyBorrowerOperations deployed to: ", proxyBorrowerOperations.address);
+
+  // Maker ProxyActions
+  const MakerProxyActions: ContractFactory = await ethers.getContractFactory("DssProxyActions");
+  const makerProxyActions: Contract = await MakerProxyActions.deploy();
+  await makerProxyActions.deployed();
+  console.log("makerProxyActions deployed to: ", makerProxyActions.address);
+
+  // Vault Migration
+  const VaultMigration: ContractFactory = await ethers.getContractFactory("VaultMigration");
+  const vaultMigration: Contract = await VaultMigration.deploy(
+    networkAddresses.UniswapFactory,
+    networkAddresses.UniswapRouter,
+    makerProxyActions.address,
+    proxyBorrowerOperations.address,
+    networkAddresses.ETH_A_GemJoin,
+    networkAddresses.ETH_B_GemJoin,
+    dSProxyFactory.address,
+    dSGuardFactory.address,
+    networkAddresses.DAI,
+    networkAddresses.WETH,
+    networkAddresses.LUSD,
+  );
+  await vaultMigration.deployed();
+  console.log("VaultMigration deployed to: ", vaultMigration.address);
+
+  return vaultMigration;
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
+deployThem()
   .then(() => process.exit(0))
   .catch((error: Error) => {
     console.error(error);

@@ -54,8 +54,16 @@ contract BorrowerOperationsScript {
         borrowerOperations.repayLUSD(_amount, _upperHint, _lowerHint);
     }
 
-    function closeTrove() external {
+    function closeTrove(
+        uint256 _debtAmount,
+        uint256 _collAmount,
+        address payable _collreceiver
+    ) external {
+        IERC20(LUSD).approve(address(borrowerOperations), _debtAmount);
+
         borrowerOperations.closeTrove();
+
+        if (_collreceiver != address(this)) _collreceiver.transfer(_collAmount);
     }
 
     function adjustTrove(

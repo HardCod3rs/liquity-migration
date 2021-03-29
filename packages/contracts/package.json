@@ -56,7 +56,7 @@
     "typechain": "hardhat typechain",
     "build": "yarn run compile",
     "node": "hardhat node",
-    "deploy:hardhat": "hardhat run --network hardhat scripts/deploy.ts",
+    "deploy:dev": "hardhat run --network dev scripts/deploy.ts",
     "deploy:mainnet": "hardhat run --network mainnet scripts/deploy.ts",
     "deploy:kovan": "hardhat run --network kovan scripts/deploy.ts"
   }
