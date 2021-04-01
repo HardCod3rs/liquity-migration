@@ -3,7 +3,8 @@
 ## TODO
 
 [X] Add Maker to Liquity
-Add Liquity To Maker
+
+[] Add Liquity To Maker
 
 ### Demo
 
