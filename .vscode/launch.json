@@ -9,16 +9,7 @@
       "request": "launch",
       "type": "pwa-chrome",
       "url": "http://localhost:5555",
-      "runtimeExecutable": "/usr/bin/chromium",
-      "webRoot": "${workspaceFolder}"
-    },
-    {
-      "name": "Launch via NPM",
-      "request": "launch",
-      "runtimeArgs": ["start"],
-      "runtimeExecutable": "npm",
-      "skipFiles": ["<node_internals>/**"],
-      "type": "pwa-node"
+      "webRoot": "${workspaceFolder}/packages/frontend"
     }
   ]
 }

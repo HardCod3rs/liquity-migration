@@ -1,0 +1,333 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_UniswapFactory",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_UniswapRouter",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_MakerProxyActions",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_LiquityProxyBorrowerOperations",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ETHAGemJoin",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ETHBGemJoin",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ProxyRegisteryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ProxyGuardRegisteryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_DAI",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_WETH",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_LUSD",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "ProxyAddress",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_CollateralAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_DebtAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "_manager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_jug",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_ethJoin",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_daiJoin",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "_ilk",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct VaultMigration.LiquitytoMakerData",
+        "name": "_vaultData",
+        "type": "tuple"
+      }
+    ],
+    "name": "mgigratetoMaker",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "manager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "gemToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "gemjoin",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "daiJoin",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cdpID",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "debtAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "collateralAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxSlippage",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct VaultMigration.MakertoLiquityData",
+        "name": "_vaultData",
+        "type": "tuple"
+      }
+    ],
+    "name": "migratetoLiquity",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_maxFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_CollateralAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_LUSDAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "_LUSDReceiver",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct VaultMigration.NewTroveData",
+        "name": "newTroveData",
+        "type": "tuple"
+      }
+    ],
+    "name": "newLiquityTrove",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_CollateralAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_DAIAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "_DAIReceiver",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_manager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_jug",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_ethJoin",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_daiJoin",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "_ilk",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct VaultMigration.NewVaultData",
+        "name": "newVaultData",
+        "type": "tuple"
+      }
+    ],
+    "name": "newMakerVault",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "cdpID",
+        "type": "uint256"
+      }
+    ],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount0",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount1",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_data",
+        "type": "bytes"
+      }
+    ],
+    "name": "uniswapV2Call",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

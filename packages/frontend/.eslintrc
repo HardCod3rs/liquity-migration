@@ -1,85 +1,44 @@
 {
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true,
+      "jsx": true
+    }
+  },
+  "rules": {
+    "semi": "error",
+    "comma-dangle": "off",
+    "no-console": "off",
+    "keyword-spacing": "warn",
+    "key-spacing": "error",
+    "prefer-const": "error",
+    "space-before-function-paren": ["error", "never"],
+    "space-before-blocks": ["warn", "always"],
+    "arrow-spacing": "warn",
+    "eqeqeq": ["error", "smart"],
+    "no-constant-condition": "off",
+    "no-useless-escape": "off",
+    "no-var": "warn",
+    "object-shorthand": "warn",
+    "no-restricted-globals": [
+      "error",
+      "event",
+      "Promise",
+      "fetch",
+      "history",
+      "location",
+      "print"
+    ],
+    "react/display-name": "off",
+    "quotes": ["error", "single"]
+  },
+  "extends": ["react-app"],
   "env": {
     "browser": true,
-    "es6": true
+    "es6": true,
+    "node": true
   },
-  "parserOptions": {
-    "ecmaFeatures": {
-      "jsx": true
-    },
-    "ecmaVersion": 2019,
-    "sourceType": "module"
-  },
-  "globals": {
-    "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly"
-  },
-  "plugins": ["import", "jsx-a11y", "react", "react-hooks", "prettier"],
-  "extends": ["airbnb", "eslint-config-prettier", "prettier/react"],
-  "rules": {
-    "prettier/prettier": "error",
-    "camelcase": "off",
-    "import/prefer-default-export": "off",
-    "react/prop-types": "off",
-    "react/jsx-filename-extension": "off",
-    "react/jsx-props-no-spreading": "off",
-    "react/no-unused-prop-types": "off",
-    "react/react-in-jsx-scope": "off",
-    "react/require-default-props": "off",
-    "import/extensions": [
-      "error",
-      "ignorePackages",
-      {
-        "ts": "never",
-        "tsx": "never",
-        "js": "never",
-        "jsx": "never"
-      }
-    ],
-    "quotes": "off",
-    "jsx-a11y/anchor-is-valid": [
-      "error",
-      {
-        "components": ["Link"],
-        "specialLink": ["hrefLeft", "hrefRight"],
-        "aspects": ["invalidHref", "preferButton"]
-      }
-    ]
-  },
-  "overrides": [
-    {
-      "files": "**/*.+(ts|tsx)",
-      "parser": "@typescript-eslint/parser",
-      "plugins": ["@typescript-eslint/eslint-plugin"],
-      "extends": [
-        "plugin:@typescript-eslint/recommended",
-        "eslint-config-prettier/@typescript-eslint"
-      ],
-      "rules": {
-        "@typescript-eslint/explicit-function-return-type": "off",
-        "@typescript-eslint/explicit-module-boundary-types": "off",
-        "no-use-before-define": [0],
-        "@typescript-eslint/no-use-before-define": [1],
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/no-var-requires": "off",
-        "@typescript-eslint/quotes": [
-          2,
-          "backtick",
-          {
-            "avoidEscape": true
-          }
-        ]
-      }
-    }
-  ],
-  "settings": {
-    "import/resolver": {
-      "typescript": {
-        "project": "."
-      }
-    },
-    "react": {
-      "version": "detect"
-    }
-  }
+  "plugins": ["react"]
 }

@@ -46,6 +46,14 @@ contract VaultMigration is UniswapFlashSwapper {
     address LiquityProxyBorrowerOperations;
     address LUSD;
 
+    struct NewTroveData {
+        address owner;
+        uint256 _maxFee;
+        uint256 _CollateralAmount;
+        uint256 _LUSDAmount;
+        address _LUSDReceiver;
+    }
+
     struct LiquitytoMakerData {
         address owner;
         uint256 _CollateralAmount;
@@ -112,36 +120,32 @@ contract VaultMigration is UniswapFlashSwapper {
             IERC20(DAI).transfer(newVaultData._DAIReceiver, newVaultData._DAIAmount);
     }
 
-    function newLiquityTrove(
-        address owner,
-        uint256 _maxFee,
-        uint256 _CollateralAmount,
-        uint256 _LUSDAmount,
-        address _LUSDReceiver
-    ) public payable {
+    function newLiquityTrove(NewTroveData memory newTroveData) public payable {
         DSProxy proxy = IProxyRegistery(ProxyRegisteryAddress).build(address(this));
         DSGuard proxyAuth = IGuardRegistery(ProxyGuardRegisteryAddress).newGuard(address(this));
 
         proxy.setAuthority(DSAuthority(address(proxyAuth)));
         proxyAuth.permit(address(this), address(proxy), bytes32(uint256(-1)));
 
-        proxy.setOwner(owner);
-        proxyAuth.setOwner(owner);
+        proxy.setOwner(newTroveData.owner);
+        proxyAuth.setOwner(newTroveData.owner);
 
-        if (msg.sender != permissionedPairAddress) require(msg.value == _CollateralAmount, "Insufficient Value");
+        if (msg.sender != permissionedPairAddress)
+            require(msg.value == newTroveData._CollateralAmount, "Insufficient Value");
 
-        proxy.execute.value(_CollateralAmount)(
+        proxy.execute.value(newTroveData._CollateralAmount)(
             LiquityProxyBorrowerOperations,
             abi.encodeWithSignature(
                 "openTrove(uint,uint,address,address)",
-                _maxFee,
-                _LUSDAmount,
+                newTroveData._maxFee,
+                newTroveData._LUSDAmount,
                 address(proxy),
                 address(proxy)
             )
         );
 
-        if (_LUSDReceiver != address(this)) IERC20(LUSD).transfer(_LUSDReceiver, _LUSDAmount);
+        if (newTroveData._LUSDReceiver != address(this))
+            IERC20(LUSD).transfer(newTroveData._LUSDReceiver, newTroveData._LUSDAmount);
     }
 
     // @notice Flash-borrows _amount of _tokenBorrow from a Uniswap V2 pair and repays using _tokenPay
@@ -187,7 +191,15 @@ contract VaultMigration is UniswapFlashSwapper {
                         )
                     );
                 require(success, "Clearing Debt Failed!");
-                newLiquityTrove(vaultData.owner, 1e17, _amount, _amountToRepay, address(this));
+                newLiquityTrove(
+                    NewTroveData({
+                        owner: vaultData.owner,
+                        _maxFee: 1e17,
+                        _CollateralAmount: _amount,
+                        _LUSDAmount: _amountToRepay,
+                        _LUSDReceiver: address(this)
+                    })
+                );
             } else {
                 (bool success, bytes memory data) =
                     MakerProxyActions.delegatecall(
@@ -212,7 +224,15 @@ contract VaultMigration is UniswapFlashSwapper {
                         vaultData.collateralAmount,
                         (vaultData.collateralAmount * vaultData.maxSlippage) / 100
                     );
-                newLiquityTrove(vaultData.owner, 1e17, amounts[amounts.length - 1], _amountToRepay, address(this));
+                newLiquityTrove(
+                    NewTroveData({
+                        owner: vaultData.owner,
+                        _maxFee: 1e17,
+                        _CollateralAmount: amounts[amounts.length - 1],
+                        _LUSDAmount: _amountToRepay,
+                        _LUSDReceiver: address(this)
+                    })
+                );
             }
         }
         // Migration to Maker

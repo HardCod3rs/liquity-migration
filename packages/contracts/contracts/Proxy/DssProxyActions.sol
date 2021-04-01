@@ -400,6 +400,15 @@ contract DssProxyActions is Common {
         ManagerLike(manager).cdpAllow(cdp, usr, ok);
     }
 
+    function cdpCan(
+        address manager,
+        uint256 cdp,
+        address usr
+    ) public view returns (bool) {
+        address own = ManagerLike(manager).owns(cdp);
+        return own == usr || ManagerLike(manager).cdpCan(own, cdp, usr) == 1;
+    }
+
     function urnAllow(
         address manager,
         address usr,
