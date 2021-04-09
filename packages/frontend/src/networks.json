@@ -1,7 +1,6 @@
 {
   "kovan": {
     "MakerSubGraph": "https://api.thegraph.com/subgraphs/name/hardcod3rs/makerkovan",
-    "VaultMigrationAddress": "0xB622ba3ced20f1c996306292525995c6d096D659",
-    "DSSProxyActionsAddress": "0xA5995B03108C9a0742dBD0232F7fc2A03c42ac3F"
+    "VaultMigrationAddress": "0xc781e6ef73aDf5381E8D98c85d55c10fA882cD4c"
   }
 }

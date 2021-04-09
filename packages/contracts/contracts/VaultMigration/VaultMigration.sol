@@ -5,13 +5,15 @@ import "./uniswap/UniswapFlashSwapper.sol";
 import "./uniswap/IUniswapRouter.sol";
 import "./IProxy.sol";
 
+// Development
+import "hardhat/console.sol";
+
 contract VaultMigration is UniswapFlashSwapper {
     // Uniswap
     IUniswapRouter UniswapRouter;
 
-    // Registers
-    address ProxyRegisteryAddress;
-    address ProxyGuardRegisteryAddress;
+    // Proxy
+    address public ProxyGuardAddress;
 
     // Maker
     address MakerProxyActions;
@@ -19,10 +21,8 @@ contract VaultMigration is UniswapFlashSwapper {
     address ETHBGemJoin;
 
     struct NewVaultData {
-        address owner;
         uint256 _CollateralAmount;
         uint256 _DAIAmount;
-        address _DAIReceiver;
         address _manager;
         address _jug;
         address _ethJoin;
@@ -31,7 +31,6 @@ contract VaultMigration is UniswapFlashSwapper {
     }
 
     struct MakertoLiquityData {
-        address owner;
         address manager;
         address gemToken;
         address gemjoin;
@@ -39,7 +38,7 @@ contract VaultMigration is UniswapFlashSwapper {
         uint256 cdpID;
         uint256 debtAmount;
         uint256 collateralAmount;
-        uint256 maxSlippage;
+        uint256 minCollateralPercentage;
     }
 
     // Liquity
@@ -47,15 +46,12 @@ contract VaultMigration is UniswapFlashSwapper {
     address LUSD;
 
     struct NewTroveData {
-        address owner;
         uint256 _maxFee;
         uint256 _CollateralAmount;
         uint256 _LUSDAmount;
-        address _LUSDReceiver;
     }
 
     struct LiquitytoMakerData {
-        address owner;
         uint256 _CollateralAmount;
         uint256 _DebtAmount;
         address _manager;
@@ -72,80 +68,55 @@ contract VaultMigration is UniswapFlashSwapper {
         address _LiquityProxyBorrowerOperations,
         address _ETHAGemJoin,
         address _ETHBGemJoin,
-        address _ProxyRegisteryAddress,
         address _ProxyGuardRegisteryAddress,
         address _DAI,
         address _WETH,
         address _LUSD
     ) public UniswapFlashSwapper(_UniswapFactory, _DAI, _WETH) {
+        // Contracts
         UniswapRouter = IUniswapRouter(_UniswapRouter);
         MakerProxyActions = _MakerProxyActions;
         LiquityProxyBorrowerOperations = _LiquityProxyBorrowerOperations;
+        // Addresses
         ETHAGemJoin = _ETHAGemJoin;
         ETHBGemJoin = _ETHBGemJoin;
-        ProxyRegisteryAddress = _ProxyRegisteryAddress;
-        ProxyGuardRegisteryAddress = _ProxyGuardRegisteryAddress;
         LUSD = _LUSD;
+        // Construct Functions
+        ProxyGuardAddress = address(_MigrationDSAuth(_ProxyGuardRegisteryAddress));
     }
 
-    function newMakerVault(NewVaultData memory newVaultData) public payable returns (uint256 cdpID) {
-        DSProxy proxy = IProxyRegistery(ProxyRegisteryAddress).build(address(this));
-        DSGuard proxyAuth = IGuardRegistery(ProxyGuardRegisteryAddress).newGuard(address(this));
-
-        proxy.setAuthority(DSAuthority(address(proxyAuth)));
-        proxyAuth.permit(address(this), address(proxy), bytes32(uint256(-1)));
-
-        proxy.setOwner(newVaultData.owner);
-        proxyAuth.setOwner(newVaultData.owner);
-
-        if (msg.sender != permissionedPairAddress)
-            require(msg.value == newVaultData._CollateralAmount, "Insufficient Value");
-
-        bytes32 result =
-            proxy.execute.value(newVaultData._CollateralAmount)(
-                LiquityProxyBorrowerOperations,
-                abi.encodeWithSignature(
-                    "openLockETHAndDraw(address,address,address,address,byte32,uint256)",
-                    newVaultData._manager,
-                    newVaultData._jug,
-                    newVaultData._ethJoin,
-                    newVaultData._daiJoin,
-                    newVaultData._ilk,
-                    newVaultData._DAIAmount
-                )
-            );
-        cdpID = abi.decode(abi.encodePacked(result), (uint256));
-
-        if (newVaultData._DAIReceiver != address(this))
-            IERC20(DAI).transfer(newVaultData._DAIReceiver, newVaultData._DAIAmount);
+    function _MigrationDSAuth(address ProxyGuardRegisteryAddress) internal returns (DSGuard proxyAuth) {
+        proxyAuth = IGuardRegistery(ProxyGuardRegisteryAddress).newGuard(address(this));
     }
 
-    function newLiquityTrove(NewTroveData memory newTroveData) public payable {
-        DSProxy proxy = IProxyRegistery(ProxyRegisteryAddress).build(address(this));
-        DSGuard proxyAuth = IGuardRegistery(ProxyGuardRegisteryAddress).newGuard(address(this));
+    function _newMakerVault(DSProxy Proxy, NewVaultData memory newVaultData) internal {
+        Proxy.execute.value(newVaultData._CollateralAmount)(
+            MakerProxyActions,
+            abi.encodeWithSignature(
+                "openLockETHAndDraw(address,address,address,address,byte32,uint256)",
+                newVaultData._manager,
+                newVaultData._jug,
+                newVaultData._ethJoin,
+                newVaultData._daiJoin,
+                newVaultData._ilk,
+                newVaultData._DAIAmount
+            )
+        );
+    }
 
-        proxy.setAuthority(DSAuthority(address(proxyAuth)));
-        proxyAuth.permit(address(this), address(proxy), bytes32(uint256(-1)));
-
-        proxy.setOwner(newTroveData.owner);
-        proxyAuth.setOwner(newTroveData.owner);
-
-        if (msg.sender != permissionedPairAddress)
-            require(msg.value == newTroveData._CollateralAmount, "Insufficient Value");
-
-        proxy.execute.value(newTroveData._CollateralAmount)(
+    function _newLiquityTrove(DSProxy Proxy, NewTroveData memory newTroveData) internal {
+        Proxy.execute.value(newTroveData._CollateralAmount)(
             LiquityProxyBorrowerOperations,
             abi.encodeWithSignature(
-                "openTrove(uint,uint,address,address)",
+                "openTroveAndDraw(uint256,uint256,address,address)",
                 newTroveData._maxFee,
                 newTroveData._LUSDAmount,
-                address(proxy),
-                address(proxy)
+                address(Proxy),
+                address(Proxy)
             )
         );
 
-        if (newTroveData._LUSDReceiver != address(this))
-            IERC20(LUSD).transfer(newTroveData._LUSDReceiver, newTroveData._LUSDAmount);
+        console.log(getBalanceOf(LUSD));
     }
 
     // @notice Flash-borrows _amount of _tokenBorrow from a Uniswap V2 pair and repays using _tokenPay
@@ -154,16 +125,14 @@ contract VaultMigration is UniswapFlashSwapper {
     // @param _tokenPay The address of the token you want to use to payback the flash-borrow, use 0x0 for ETH
     // @param _userData Data that will be passed to the `execute` function for the user
     // @dev Depending on your use case, you may want to add access controls to this function
-    function migratetoLiquity(MakertoLiquityData calldata _vaultData) external {
-        // User have to approve this contract through CDPAllow
-        // Debt is debt amount * rate
-        require(msg.sender == _vaultData.owner, "You are not the owner!");
-        startSwap(DAI, _vaultData.debtAmount, LUSD, abi.encode(_vaultData));
+    function migratetoLiquity(address ProxyAddress, MakertoLiquityData calldata _vaultData) external {
+        require(msg.sender == DSProxy(ProxyAddress).owner(), "You are not the Vault Owner");
+        startSwap(DAI, _vaultData.debtAmount, LUSD, abi.encode(ProxyAddress, _vaultData));
     }
 
     //
     function mgigratetoMaker(address ProxyAddress, LiquitytoMakerData calldata _vaultData) external {
-        require(msg.sender == _vaultData.owner, "You are not the owner!");
+        require(msg.sender == DSProxy(ProxyAddress).owner(), "You are not the Trove Owner");
         startSwap(LUSD, _vaultData._DebtAmount, DAI, abi.encode(ProxyAddress, _vaultData));
     }
 
@@ -174,63 +143,59 @@ contract VaultMigration is UniswapFlashSwapper {
         uint256 _amountToRepay,
         bytes memory _userData
     ) internal {
+        console.log("WTF");
         // Migration to Liquity
         if (_tokenBorrow == DAI) {
-            MakertoLiquityData memory vaultData = abi.decode(_userData, (MakertoLiquityData));
+            console.log("pay amount: %s repay amount: %s", _amount, _amountToRepay);
+            (address ProxyAddress, MakertoLiquityData memory vaultData) =
+                abi.decode(_userData, (address, MakertoLiquityData));
+            IERC20(_tokenBorrow).approve(ProxyAddress, _amount);
             if (vaultData.gemjoin == ETHAGemJoin || vaultData.gemjoin == ETHBGemJoin) {
-                (bool success, bytes memory data) =
-                    MakerProxyActions.delegatecall(
-                        abi.encodeWithSignature(
-                            "wipeAllAndFreeETH(address,address,address,uint,uint,address)",
-                            vaultData.manager,
-                            vaultData.gemjoin,
-                            vaultData.daiJoin,
-                            vaultData.cdpID,
-                            vaultData.collateralAmount,
-                            address(this)
-                        )
-                    );
-                require(success, "Clearing Debt Failed!");
-                newLiquityTrove(
+                console.log("passed");
+                DSProxy(ProxyAddress).execute(
+                    MakerProxyActions,
+                    abi.encodeWithSignature(
+                        "wipeAllAndFreeETH(address,address,address,uint256,uint256)",
+                        vaultData.manager,
+                        vaultData.gemjoin,
+                        vaultData.daiJoin,
+                        vaultData.cdpID,
+                        vaultData.collateralAmount
+                    )
+                );
+                console.log("Balance: %s Collateral: %s", getBalanceOf(address(0)), vaultData.collateralAmount);
+                _newLiquityTrove(
+                    DSProxy(ProxyAddress),
                     NewTroveData({
-                        owner: vaultData.owner,
                         _maxFee: 1e17,
-                        _CollateralAmount: _amount,
-                        _LUSDAmount: _amountToRepay,
-                        _LUSDReceiver: address(this)
+                        _CollateralAmount: vaultData.collateralAmount,
+                        _LUSDAmount: _amountToRepay
                     })
                 );
             } else {
-                (bool success, bytes memory data) =
-                    MakerProxyActions.delegatecall(
-                        abi.encodeWithSignature(
-                            "wipeAllAndFreeGem(address,address,address,uint,uint,address)",
-                            vaultData.manager,
-                            vaultData.gemjoin,
-                            vaultData.daiJoin,
-                            vaultData.cdpID,
-                            vaultData.collateralAmount,
-                            address(this)
-                        )
-                    );
-                require(success, "Clearing Debt Failed!");
+                DSProxy(ProxyAddress).execute(
+                    MakerProxyActions,
+                    abi.encodeWithSignature(
+                        "wipeAllAndFreeGem(address,address,address,uint256,uint256)",
+                        vaultData.manager,
+                        vaultData.gemjoin,
+                        vaultData.daiJoin,
+                        vaultData.cdpID,
+                        vaultData.collateralAmount
+                    )
+                );
                 // Swap
-                address[] memory swapPath = new address[](2);
-                swapPath[0] = vaultData.gemToken;
-                swapPath[1] = WETH;
                 uint256[] memory amounts =
-                    swapToETH(
-                        swapPath,
-                        vaultData.collateralAmount,
-                        (vaultData.collateralAmount * vaultData.maxSlippage) / 100
-                    );
-                newLiquityTrove(
+                    swapToETH(vaultData.gemToken, vaultData.collateralAmount, vaultData.minCollateralPercentage);
+
+                console.log("Balance: %s Collateral: %s", getBalanceOf(address(0)), vaultData.collateralAmount);
+
+                _newLiquityTrove(
+                    DSProxy(ProxyAddress),
                     NewTroveData({
-                        owner: vaultData.owner,
                         _maxFee: 1e17,
                         _CollateralAmount: amounts[amounts.length - 1],
-                        _LUSDAmount: _amountToRepay,
-                        _LUSDReceiver: address(this)
+                        _LUSDAmount: _amountToRepay
                     })
                 );
             }
@@ -239,26 +204,21 @@ contract VaultMigration is UniswapFlashSwapper {
         else if (_tokenBorrow == LUSD) {
             (address ProxyAddress, LiquitytoMakerData memory vaultData) =
                 abi.decode(_userData, (address, LiquitytoMakerData));
-            (bool status, bytes memory data) =
-                ProxyAddress.call(
-                    abi.encodeWithSignature(
-                        "execute(address,bytes)",
-                        address(LiquityProxyBorrowerOperations),
-                        abi.encodeWithSignature(
-                            "closeTrove(uint256,uint256,address)",
-                            vaultData._DebtAmount,
-                            vaultData._CollateralAmount,
-                            address(this)
-                        )
-                    )
-                );
-            require(status, "Failed to Close Trove!");
-            newMakerVault(
+            IERC20(_tokenBorrow).approve(ProxyAddress, _amount);
+            DSProxy(ProxyAddress).execute(
+                LiquityProxyBorrowerOperations,
+                abi.encodeWithSignature(
+                    "closeTroveAndFreeETH(uint256,uint256)",
+                    vaultData._DebtAmount,
+                    vaultData._CollateralAmount
+                )
+            );
+
+            _newMakerVault(
+                DSProxy(ProxyAddress),
                 NewVaultData({
-                    owner: vaultData.owner,
                     _CollateralAmount: vaultData._CollateralAmount,
                     _DAIAmount: _amountToRepay,
-                    _DAIReceiver: address(this),
                     _manager: vaultData._manager,
                     _jug: vaultData._jug,
                     _ethJoin: vaultData._ethJoin,
@@ -270,16 +230,26 @@ contract VaultMigration is UniswapFlashSwapper {
     }
 
     function swapToETH(
-        address[] memory path,
+        address token,
         uint256 amount,
-        uint256 minReturn
+        uint256 minReturnPercent
     ) internal returns (uint256[] memory amounts) {
-        IERC20(path[0]).approve(address(UniswapRouter), amount);
-        amounts = UniswapRouter.swapExactTokensForTokens(amount, minReturn, path, address(this), (now + 30 minutes));
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = token;
+        swapPath[1] = WETH;
+        uint256[] memory estimatedOuts = UniswapRouter.getAmountsOut(amount, swapPath);
+        IERC20(swapPath[0]).approve(address(UniswapRouter), amount);
+        amounts = UniswapRouter.swapExactTokensForTokens(
+            amount,
+            (estimatedOuts[estimatedOuts.length - 1] * minReturnPercent) / 100,
+            swapPath,
+            address(this),
+            (now + 30 minutes)
+        );
         IWETH(WETH).withdraw(amounts[amounts.length - 1]);
     }
 
-    function getBalanceOf(address _input) private returns (uint256) {
+    function getBalanceOf(address _input) public view returns (uint256) {
         if (_input == address(0)) {
             return address(this).balance;
         }

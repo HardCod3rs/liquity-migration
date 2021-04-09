@@ -59,7 +59,8 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic,
       },
-      chainId: chainIds.hardhat,
+      chainId: 1337,
+      //chainId: chainIds.hardhat,
       forking: {
         url: "https://" + "kovan" + ".infura.io/v3/" + infuraApiKey,
       },

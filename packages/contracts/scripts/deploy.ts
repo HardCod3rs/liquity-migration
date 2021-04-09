@@ -35,22 +35,15 @@ export async function deployThem(): Promise<Contract> {
   await proxyBorrowerOperations.deployed();
   console.log("ProxyBorrowerOperations deployed to: ", proxyBorrowerOperations.address);
 
-  // Maker ProxyActions
-  const MakerProxyActions: ContractFactory = await ethers.getContractFactory("DssProxyActions");
-  const makerProxyActions: Contract = await MakerProxyActions.deploy();
-  await makerProxyActions.deployed();
-  console.log("makerProxyActions deployed to: ", makerProxyActions.address);
-
   // Vault Migration
   const VaultMigration: ContractFactory = await ethers.getContractFactory("VaultMigration");
   const vaultMigration: Contract = await VaultMigration.deploy(
     networkAddresses.UniswapFactory,
     networkAddresses.UniswapRouter,
-    makerProxyActions.address,
+    networkAddresses.MakerProxyActions,
     proxyBorrowerOperations.address,
     networkAddresses.ETH_A_GemJoin,
     networkAddresses.ETH_B_GemJoin,
-    dSProxyFactory.address,
     dSGuardFactory.address,
     networkAddresses.DAI,
     networkAddresses.WETH,

@@ -7,7 +7,14 @@ import "./Interfaces/IERC20.sol";
 
 contract BorrowerOperationsScript {
     IBorrowerOperations immutable borrowerOperations;
-    address LUSD;
+    address immutable LUSD;
+
+    function LUSD_Join(address _From, uint256 _Amount) private {
+        // Gets LUSD from the user's wallet
+        IERC20(LUSD).transferFrom(_From, address(this), _Amount);
+        // Approves Operations to take the LUSD amount
+        IERC20(LUSD).approve(address(borrowerOperations), _Amount);
+    }
 
     constructor(IBorrowerOperations _borrowerOperations, address _LUSD) public {
         borrowerOperations = _borrowerOperations;
@@ -15,6 +22,15 @@ contract BorrowerOperationsScript {
     }
 
     function openTrove(
+        uint256 _maxFee,
+        uint256 _LUSDAmount,
+        address _upperHint,
+        address _lowerHint
+    ) external payable {
+        borrowerOperations.openTrove{ value: msg.value }(_maxFee, _LUSDAmount, _upperHint, _lowerHint);
+    }
+
+    function openTroveAndDraw(
         uint256 _maxFee,
         uint256 _LUSDAmount,
         address _upperHint,
@@ -54,16 +70,14 @@ contract BorrowerOperationsScript {
         borrowerOperations.repayLUSD(_amount, _upperHint, _lowerHint);
     }
 
-    function closeTrove(
-        uint256 _debtAmount,
-        uint256 _collAmount,
-        address payable _collreceiver
-    ) external {
-        IERC20(LUSD).approve(address(borrowerOperations), _debtAmount);
-
+    function closeTrove() external {
         borrowerOperations.closeTrove();
+    }
 
-        if (_collreceiver != address(this)) _collreceiver.transfer(_collAmount);
+    function closeTroveAndFreeETH(uint256 _debtAmount, uint256 _collAmount) external {
+        LUSD_Join(msg.sender, _debtAmount);
+        borrowerOperations.closeTrove();
+        msg.sender.transfer(_collAmount);
     }
 
     function adjustTrove(
@@ -82,6 +96,25 @@ contract BorrowerOperationsScript {
             _upperHint,
             _lowerHint
         );
+    }
+
+    function adjustTroveAndDraw(
+        uint256 _maxFee,
+        uint256 _collWithdrawal,
+        uint256 _debtChange,
+        bool isDebtIncrease,
+        address _upperHint,
+        address _lowerHint
+    ) external payable {
+        borrowerOperations.adjustTrove{ value: msg.value }(
+            _maxFee,
+            _collWithdrawal,
+            _debtChange,
+            isDebtIncrease,
+            _upperHint,
+            _lowerHint
+        );
+        if (isDebtIncrease) IERC20(LUSD).transfer(msg.sender, _debtChange);
     }
 
     function claimCollateral() external {

@@ -67,6 +67,42 @@
     "type": "fallback"
   },
   {
+    "constant": true,
+    "inputs": [],
+    "name": "ProxyGuardAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_input",
+        "type": "address"
+      }
+    ],
+    "name": "getBalanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "constant": false,
     "inputs": [
       {
@@ -76,11 +112,6 @@
       },
       {
         "components": [
-          {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address"
-          },
           {
             "internalType": "uint256",
             "name": "_CollateralAmount",
@@ -132,12 +163,12 @@
     "constant": false,
     "inputs": [
       {
+        "internalType": "address",
+        "name": "ProxyAddress",
+        "type": "address"
+      },
+      {
         "components": [
-          {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address"
-          },
           {
             "internalType": "address",
             "name": "manager",
@@ -175,7 +206,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "maxSlippage",
+            "name": "minCollateralPercentage",
             "type": "uint256"
           }
         ],
@@ -188,116 +219,6 @@
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "_maxFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "_CollateralAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "_LUSDAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "_LUSDReceiver",
-            "type": "address"
-          }
-        ],
-        "internalType": "struct VaultMigration.NewTroveData",
-        "name": "newTroveData",
-        "type": "tuple"
-      }
-    ],
-    "name": "newLiquityTrove",
-    "outputs": [],
-    "payable": true,
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "_CollateralAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "_DAIAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "_DAIReceiver",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "_manager",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "_jug",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "_ethJoin",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "_daiJoin",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "_ilk",
-            "type": "bytes32"
-          }
-        ],
-        "internalType": "struct VaultMigration.NewVaultData",
-        "name": "newVaultData",
-        "type": "tuple"
-      }
-    ],
-    "name": "newMakerVault",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "cdpID",
-        "type": "uint256"
-      }
-    ],
-    "payable": true,
-    "stateMutability": "payable",
     "type": "function"
   },
   {

@@ -19,6 +19,9 @@ pragma solidity 0.4.23;
 
 import "./DSProxy.sol";
 
+// Development
+import "hardhat/console.sol";
+
 contract DSGuardEvents {
     event LogPermit(bytes32 indexed src, bytes32 indexed dst, bytes32 indexed sig);
 
@@ -38,15 +41,19 @@ contract DSGuard is DSAuth, DSAuthority, DSGuardEvents {
         var src = bytes32(src_);
         var dst = bytes32(dst_);
 
-        return
-            acl[src][dst][sig] ||
-            acl[src][dst][ANY] ||
-            acl[src][ANY][sig] ||
-            acl[src][ANY][ANY] ||
-            acl[ANY][dst][sig] ||
-            acl[ANY][dst][ANY] ||
-            acl[ANY][ANY][sig] ||
-            acl[ANY][ANY][ANY];
+        console.log("owner access: %s", src_ == owner);
+
+        if (src_ == owner) return true;
+        else
+            return
+                acl[src][dst][sig] ||
+                acl[src][dst][ANY] ||
+                acl[src][ANY][sig] ||
+                acl[src][ANY][ANY] ||
+                acl[ANY][dst][sig] ||
+                acl[ANY][dst][ANY] ||
+                acl[ANY][ANY][sig] ||
+                acl[ANY][ANY][ANY];
     }
 
     function permit(

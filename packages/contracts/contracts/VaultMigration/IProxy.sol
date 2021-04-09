@@ -27,6 +27,8 @@ contract DSAuthority {
 }
 
 interface DSProxy {
+    function owner() external view returns (address);
+
     function execute(address _target, bytes calldata _data) external payable returns (bytes32 response);
 
     function setAuthority(DSAuthority authority_) external;

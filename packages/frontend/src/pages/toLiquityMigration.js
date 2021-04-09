@@ -12,7 +12,6 @@ import {
   TableRow,
   Slider,
 } from '@material-ui/core';
-import { formatUnits, isZero } from 'utils/big-number';
 import { DoMigration } from 'utils/liquitymigration';
 import { UseWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
@@ -90,7 +89,7 @@ export default function() {
 
       users.forEach(({ vaults }) => {
         vaults.forEach(vault => {
-          if (!isZero(vault.collateral)) {
+          if (vault.collateral > 0 && vault.debt > 0) {
             Vaults.push({
               ...vault,
               vaultProxy: users[0].proxies[0].id,

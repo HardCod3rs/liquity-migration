@@ -6,7 +6,6 @@ import { CACHE_WALLET_KEY, INFURA_ID } from 'config';
 import cache from 'utils/cache';
 import NETWORKS from 'networks.json';
 import VAULT_MIGRATION_ABI from 'abis/VaultMigration.json';
-import DSS_PROXY_ACTIONS_ABI from 'abis/DSSProxyActions.json';
 
 const DEFAULT_NETWORK_ID = 42;
 
@@ -21,9 +20,6 @@ export function WalletProvider({ children }) {
   const [address, setAddress] = React.useState(null);
   const [signer, setSigner] = React.useState(null);
   const [network, setNetwork] = React.useState('');
-  const [DSSProxyActionsAddress, setDSSProxyActionsAddress] = React.useState(
-    null
-  );
   const [VaultMigrationAddress, setVaultMigrationAddress] = React.useState(
     null
   );
@@ -39,18 +35,6 @@ export function WalletProvider({ children }) {
       VaultMigrationAddress &&
       new ethers.Contract(VaultMigrationAddress, VAULT_MIGRATION_ABI, signer),
     [signer, VaultMigrationAddress]
-  );
-
-  const DSSProxyActionsContract = React.useMemo(
-    () =>
-      signer &&
-      DSSProxyActionsAddress &&
-      new ethers.Contract(
-        DSSProxyActionsAddress,
-        DSS_PROXY_ACTIONS_ABI,
-        signer
-      ),
-    [signer, DSSProxyActionsAddress]
   );
 
   const connect = React.useCallback(
@@ -129,7 +113,14 @@ export function WalletProvider({ children }) {
     (async () => {
       const net = await signer.provider.getNetwork();
       if (isMounted) {
-        setNetwork(~['homestead'].indexOf(net.name) ? 'mainnet' : net.name);
+        const chainId = await getDefaultNetworkId();
+        setNetwork(
+          ~['homestead'].indexOf(net.name)
+            ? 'mainnet'
+            : chainId == 1337
+            ? 'kovan'
+            : net.name
+        );
       }
     })();
     return () => (isMounted = false);
@@ -149,7 +140,6 @@ export function WalletProvider({ children }) {
     (async () => {
       if (isMounted) {
         setVaultMigrationAddress(cfg.VaultMigrationAddress);
-        setDSSProxyActionsAddress(cfg.DSSProxyActionsAddress);
       }
     })();
     return () => (isMounted = false);
@@ -166,7 +156,6 @@ export function WalletProvider({ children }) {
         network,
         signer,
         VaultMigrationContract,
-        DSSProxyActionsContract,
         subgraph,
       }}
     >
@@ -189,7 +178,6 @@ export function UseWallet() {
     network,
     signer,
     VaultMigrationContract,
-    DSSProxyActionsContract,
     subgraph,
   } = context;
 
@@ -203,7 +191,6 @@ export function UseWallet() {
     signer,
     availableNetworkNames: Object.keys(NETWORKS),
     VaultMigrationContract,
-    DSSProxyActionsContract,
     subgraph,
   };
 }
@@ -211,15 +198,10 @@ export function UseWallet() {
 // https://github.com/Synthetixio/staking/blob/c42ac534ba774d83caca183a52348c8b6260fcf4/utils/network.ts#L5
 async function getDefaultNetworkId() {
   try {
-    if (window?.web3?.eth?.net) {
-      const networkId = await window.web3.eth.net.getId();
+    if (window?.ethereum?.chainId) {
+      const networkId = window.ethereum.chainId;
       return Number(networkId);
-    } else if (window?.web3?.version?.network) {
-      return Number(window?.web3.version.network);
-    } else if (window?.ethereum?.networkVersion) {
-      return Number(window?.ethereum?.networkVersion);
-    }
-    return DEFAULT_NETWORK_ID;
+    } else return DEFAULT_NETWORK_ID;
   } catch (e) {
     console.log(e);
     return DEFAULT_NETWORK_ID;
