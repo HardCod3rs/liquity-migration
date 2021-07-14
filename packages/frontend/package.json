@@ -12,7 +12,7 @@
     "bnc-onboard": "1.17.1",
     "dotenv": "^8.2.0",
     "env-cmd": "^10.1.0",
-    "ethers": "^5.0.23",
+    "ethers": "^5.3.1",
     "immutable-tuple": "^0.4.10",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
