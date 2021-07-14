@@ -3,7 +3,7 @@
   "description": "liquity migration contracts",
   "version": "1.0.0",
   "dependencies": {
-    "solc": "0.8.1"
+    "solc": "0.8.6"
   },
   "devDependencies": {
     "@commitlint/cli": "^9.1.2",
